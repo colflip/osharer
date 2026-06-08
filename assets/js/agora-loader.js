@@ -36,7 +36,7 @@
         if (window.AgoraRTC) return window.AgoraRTC;
         if (!agoraSdkPromise) {
             agoraSdkPromise = (async () => {
-                for (const src of window.ScreenCastConfig.AGORA_SDK_SOURCES) {
+                for (const src of window.oSharerConfig.AGORA_SDK_SOURCES) {
                     try {
                         await loadScriptWithTimeout(src);
                         if (window.AgoraRTC) return window.AgoraRTC;

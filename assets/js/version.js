@@ -1,6 +1,6 @@
 (function renderDeployVersion() {
-    const config = window.ScreenCastConfig || {};
-    const repo = config.GITHUB_REPO || "colflip/sharer";
+    const config = window.oSharerConfig || {};
+    const repo = config.GITHUB_REPO || "colflip/osharer";
     const repoUrl = repo ? `https://github.com/${repo}` : "";
 
     function ensureVersionEl() {
@@ -38,24 +38,13 @@
         el.textContent = "unknown";
     }
 
-    // 优先读取构建时注入的版本信息
+    // 优先读取构建时注入的版本信息，避免 GitHub API 被墙
     fetch("assets/version.json?_=" + Date.now(), { cache: "no-store" })
         .then(response => {
             if (!response.ok) throw new Error("Failed to load version");
             return response.json();
         })
         .then(data => {
-            // 优先用 buildTime 显示部署时间，其次用 shortSha
-            if (data.buildTime) {
-                const d = new Date(data.buildTime);
-                const ts = d.getFullYear().toString().slice(2) +
-                    String(d.getMonth() + 1).padStart(2, "0") +
-                    String(d.getDate()).padStart(2, "0") + " " +
-                    String(d.getHours()).padStart(2, "0") +
-                    String(d.getMinutes()).padStart(2, "0");
-                displayVersion(data.shortSha + " " + ts);
-                return;
-            }
             if (data.shortSha) {
                 displayVersion(data.shortSha);
                 return;

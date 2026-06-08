@@ -1,4 +1,4 @@
-const APP_ID = window.ScreenCastConfig?.APP_ID || "";
+const APP_ID = window.oSharerConfig?.APP_ID || "";
 
 function createShortId(prefix = "") {
     const randomPart = Math.random().toString(36).substring(2, 8);
@@ -160,7 +160,7 @@ document.getElementById('enterBtn').onclick = async () => {
         await ensureAgoraSdk();
         const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
         // 构造与分享端一致的频道名
-        const channel = `iosshare-${roomId}-${pwd}`;
+        const channel = `oshare-${roomId}-${pwd}`;
 
         client.on("connection-state-change", (curState, prevState, reason) => {
             console.log("连接状态:", prevState, "->", curState, reason || "");

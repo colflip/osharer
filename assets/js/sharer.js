@@ -1,4 +1,4 @@
-const APP_ID = window.ScreenCastConfig?.APP_ID || "";
+const APP_ID = window.oSharerConfig?.APP_ID || "";
 let client, screenTrack;
 let countdownTimer = null; // 全局定时器引用
 let totalSecondsRemaining = 0; // 全局剩余秒数
@@ -1105,7 +1105,7 @@ document.getElementById('generateBtn').onclick = async () => {
     // 生成 4 位密码和随机房间 ID
     const password = String(Math.floor(1000 + Math.random() * 9000));
     const roomId = Math.random().toString(36).substring(7);
-    const channel = `iosshare-${roomId}-${password}`;
+    const channel = `oshare-${roomId}-${password}`;
     const sharePrompt = document.getElementById('sharePromptInput').value.trim() || DEFAULT_SHARE_PROMPT;
     localStorage.setItem(SHARE_PROMPT_KEY, sharePrompt);
     document.getElementById('sharePromptInput').value = sharePrompt;

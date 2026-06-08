@@ -30,7 +30,7 @@ loadLocalEnv();
 const appId = process.env.AGORA_APP_ID || "";
 const config = {
     APP_ID: appId,
-    GITHUB_REPO: "colflip/sharer",
+    GITHUB_REPO: "colflip/osharer",
     AGORA_SDK_SOURCES: [
         "vendor/AgoraRTC_N-4.23.1.js",
         "https://download.agora.io/sdk/release/AgoraRTC_N-4.23.1.js"
@@ -40,7 +40,7 @@ const config = {
 const configDir = path.join(__dirname, "..", "assets", "js");
 const configPath = path.join(configDir, "config.js");
 fs.mkdirSync(configDir, { recursive: true });
-fs.writeFileSync(configPath, `window.ScreenCastConfig = ${JSON.stringify(config, null, 4)};\n`);
+fs.writeFileSync(configPath, `window.oSharerConfig = ${JSON.stringify(config, null, 4)};\n`);
 
 // Get commit SHA
 let sha = "";
@@ -53,16 +53,13 @@ if (process.env.RENDER_GIT_COMMIT) {
             cwd: path.join(__dirname, "..")
         }).trim();
     } catch (err) {
-        // No .git directory available
         sha = "";
     }
 }
 
 const versionPayload = {
     sha: sha || "",
-    shortSha: (sha || "").slice(0, 7),
-    source: process.env.RENDER_GIT_COMMIT ? "render" : "local",
-    buildTime: new Date().toISOString()
+    shortSha: (sha || "").slice(0, 7)
 };
 
 const versionDir = path.join(__dirname, "..", "assets");
