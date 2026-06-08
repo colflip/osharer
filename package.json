@@ -4,7 +4,7 @@
     "private": true,
     "description": "Static Agora-based screen sharing pages.",
     "scripts": {
-        "build": "node scripts/write-version.js && curl -s -L -o vendor/AgoraRTC_N-4.23.1.js https://download.agora.io/sdk/release/AgoraRTC_N-4.23.1.js || true",
+        "build": "node scripts/write-version.js",
         "serve": "python3 -m http.server 4173",
         "check": "npm run build && node --check scripts/write-version.js && node --check assets/js/config.js && node --check assets/js/version.js && node --check assets/js/agora-loader.js && node --check assets/js/viewer.js && node --check assets/js/sharer.js"
     }

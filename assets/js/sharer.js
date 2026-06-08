@@ -93,17 +93,6 @@ function escapeHtml(value) {
         '"': "&quot;",
         "'": "&#39;"
     }[char]));
-
-// === localStorage 简易加密 (XOR掩码 + Base64) ===
-const _LS_MASK = 0x5A;
-function _lsEncode(str) {
-    return btoa(String.fromCharCode(...str.split("").map(c => c.charCodeAt(0) ^ _LS_MASK)));
-}
-function _lsDecode(b64) {
-    try {
-        return atob(b64).split("").map(c => String.fromCharCode(c.charCodeAt(0) ^ _LS_MASK)).join("");
-    } catch { return ""; }
-}
 }
 
 function formatTime(value) {
@@ -343,25 +332,23 @@ function saveViewerRecords() {
         recordsKey: currentRecordsKey,
         records: viewerRecords
     };
-    localStorage.setItem(VIEWER_RECORDS_CACHE_KEY, _lsEncode(JSON.stringify(cache)));
+    localStorage.setItem(VIEWER_RECORDS_CACHE_KEY, JSON.stringify(cache));
     if (!currentRecordsKey) return;
-    localStorage.setItem(currentRecordsKey, _lsEncode(JSON.stringify(viewerRecords)));
+    localStorage.setItem(currentRecordsKey, JSON.stringify(viewerRecords));
     localStorage.setItem(LAST_RECORDS_KEY, currentRecordsKey);
 }
 
 function loadSavedViewerRecords() {
     try {
         let saved = [];
-        const rawCache = localStorage.getItem(VIEWER_RECORDS_CACHE_KEY);
-        const cached = rawCache ? JSON.parse(_lsDecode(rawCache)) : null;
+        const cached = JSON.parse(localStorage.getItem(VIEWER_RECORDS_CACHE_KEY) || "null");
         if (cached && Array.isArray(cached.records)) {
             saved = cached.records;
             if (!currentRecordsKey && cached.recordsKey) {
                 currentRecordsKey = cached.recordsKey;
             }
         } else if (currentRecordsKey) {
-            const raw = localStorage.getItem(currentRecordsKey);
-            saved = raw ? JSON.parse(_lsDecode(raw)) || [] : [];
+            saved = JSON.parse(localStorage.getItem(currentRecordsKey) || "[]");
         }
 
         if (Array.isArray(saved)) {
@@ -807,19 +794,16 @@ async function getMediaCapability(config) {
     }
 
     try {
-        return await Promise.race([
-            navigator.mediaCapabilities.encodingInfo({
-                type: "webrtc",
-                video: {
-                    contentType: "video/VP8",
-                    width: config.width,
-                    height: config.height,
-                    bitrate: config.bitrateMax * 1000,
-                    framerate: config.frameRate
-                }
-            }),
-            new Promise(resolve => setTimeout(() => resolve(null), 500))
-        ]);
+        return await navigator.mediaCapabilities.encodingInfo({
+            type: "webrtc",
+            video: {
+                contentType: "video/VP8",
+                width: config.width,
+                height: config.height,
+                bitrate: config.bitrateMax * 1000,
+                framerate: config.frameRate
+            }
+        });
     } catch (err) {
         console.warn("清晰度能力检测失败:", err);
         return null;
@@ -994,8 +978,7 @@ document.querySelectorAll('#qualitySelector .control-item').forEach(item => {
     };
 });
 
-// 预加载 Agora SDK，避免点击后等待
-ensureAgoraSdk();
+refreshQualitySupport();
 
 // 码率选择逻辑
 document.querySelectorAll('#bitrateSelector .control-item').forEach(item => {
@@ -1004,7 +987,7 @@ document.querySelectorAll('#bitrateSelector .control-item').forEach(item => {
         resetAutoNetworkState();
         selectedBitrate = item.getAttribute('data-bitrate');
         setBitrateActive(selectedBitrate);
-        refreshQualitySupport();
+        await refreshQualitySupport();
 
         if (screenTrack) {
             try {
@@ -1115,11 +1098,8 @@ document.getElementById('generateBtn').onclick = async () => {
         preflightNotice = [preflightNotice, `🟡 ${supportIssue}`].filter(Boolean).join("\n");
     }
 
-    // 生成 4 位密码（拒绝全重复/连续数字）
-    let password;
-    do {
-        password = String(Math.floor(1000 + Math.random() * 9000));
-    } while (/^(\d)\1+$/.test(password) || /^(012|123|234|345|456|567|678|789|890)$/.test(password));
+    // 生成 4 位密码和随机房间 ID
+    const password = String(Math.floor(1000 + Math.random() * 9000));
     const roomId = Math.random().toString(36).substring(7);
     const channel = `iosshare-${roomId}-${password}`;
     const sharePrompt = document.getElementById('sharePromptInput').value.trim() || DEFAULT_SHARE_PROMPT;
