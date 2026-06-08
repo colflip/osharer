@@ -2,18 +2,6 @@ const fs = require("fs");
 const path = require("path");
 const { execFileSync } = require("child_process");
 
-function getCommitSha() {
-    if (process.env.RENDER_GIT_COMMIT) {
-        return process.env.RENDER_GIT_COMMIT;
-    }
-
-    try {
-        return execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
-    } catch (err) {
-        return "";
-    }
-}
-
 function loadLocalEnv() {
     const envPath = path.join(__dirname, "..", ".env");
     if (!fs.existsSync(envPath)) return;
@@ -39,18 +27,6 @@ function loadLocalEnv() {
 
 loadLocalEnv();
 
-const sha = getCommitSha();
-const versionPath = path.join(__dirname, "..", "assets", "version.json");
-const configPath = path.join(__dirname, "..", "assets", "js", "config.js");
-const payload = {
-    sha,
-    shortSha: sha.slice(0, 7),
-    source: process.env.RENDER_GIT_COMMIT ? "render" : "local"
-};
-
-fs.mkdirSync(path.dirname(versionPath), { recursive: true });
-fs.writeFileSync(versionPath, `${JSON.stringify(payload, null, 2)}\n`);
-
 const appId = process.env.AGORA_APP_ID || "";
 const config = {
     APP_ID: appId,
@@ -61,5 +37,35 @@ const config = {
     ]
 };
 
-fs.mkdirSync(path.dirname(configPath), { recursive: true });
+const configDir = path.join(__dirname, "..", "assets", "js");
+const configPath = path.join(configDir, "config.js");
+fs.mkdirSync(configDir, { recursive: true });
 fs.writeFileSync(configPath, `window.ScreenCastConfig = ${JSON.stringify(config, null, 4)};\n`);
+
+// Get commit SHA
+let sha = "";
+if (process.env.RENDER_GIT_COMMIT) {
+    sha = process.env.RENDER_GIT_COMMIT;
+} else {
+    try {
+        sha = execFileSync("git", ["rev-parse", "HEAD"], {
+            encoding: "utf8",
+            cwd: path.join(__dirname, "..")
+        }).trim();
+    } catch (err) {
+        // No .git directory available
+        sha = "";
+    }
+}
+
+const versionPayload = {
+    sha: sha || "",
+    shortSha: (sha || "").slice(0, 7),
+    source: process.env.RENDER_GIT_COMMIT ? "render" : "local",
+    buildTime: new Date().toISOString()
+};
+
+const versionDir = path.join(__dirname, "..", "assets");
+const versionPath = path.join(versionDir, "version.json");
+fs.mkdirSync(versionDir, { recursive: true });
+fs.writeFileSync(versionPath, `${JSON.stringify(versionPayload, null, 2)}\n`);
