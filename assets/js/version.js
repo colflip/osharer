@@ -52,17 +52,6 @@
         el.setAttribute("aria-label", "Deploy version failed to load");
     }
 
-    function fetchGitHubVersion() {
-        if (!repo) return Promise.reject(new Error("Missing GitHub repo"));
-
-        return fetch(`https://api.github.com/repos/${repo}/commits/main`, { cache: "no-store" })
-            .then((response) => {
-                if (!response.ok) throw new Error("Failed to load GitHub version");
-                return response.json();
-            })
-            .then((data) => data.sha);
-    }
-
     function fetchBuildVersion() {
         return fetch("assets/version.json", { cache: "no-store" })
             .then((response) => {
@@ -72,8 +61,19 @@
             .then((data) => data.sha || data.shortSha);
     }
 
-    fetchGitHubVersion()
-        .catch(fetchBuildVersion)
+    // 优先读取构建时注入的版本，避免 GitHub API 被墙导致显示"版本获取失败"
+    fetchBuildVersion()
         .then(setVersion)
-        .catch(setVersionError);
+        .catch(() => {
+            // 本地开发无 version.json 时 fallback 到 GitHub API
+            if (!repo) return;
+            fetch(`https://api.github.com/repos/${repo}/commits/main`, { cache: "no-store" })
+                .then((response) => {
+                    if (!response.ok) throw new Error("Failed to load GitHub version");
+                    return response.json();
+                })
+                .then((data) => data.sha)
+                .then(setVersion)
+                .catch(setVersionError);
+        });
 })();

@@ -794,16 +794,19 @@ async function getMediaCapability(config) {
     }
 
     try {
-        return await navigator.mediaCapabilities.encodingInfo({
-            type: "webrtc",
-            video: {
-                contentType: "video/VP8",
-                width: config.width,
-                height: config.height,
-                bitrate: config.bitrateMax * 1000,
-                framerate: config.frameRate
-            }
-        });
+        return await Promise.race([
+            navigator.mediaCapabilities.encodingInfo({
+                type: "webrtc",
+                video: {
+                    contentType: "video/VP8",
+                    width: config.width,
+                    height: config.height,
+                    bitrate: config.bitrateMax * 1000,
+                    framerate: config.frameRate
+                }
+            }),
+            new Promise(resolve => setTimeout(() => resolve(null), 1500))
+        ]);
     } catch (err) {
         console.warn("清晰度能力检测失败:", err);
         return null;
@@ -978,7 +981,8 @@ document.querySelectorAll('#qualitySelector .control-item').forEach(item => {
     };
 });
 
-refreshQualitySupport();
+// 品质检测不阻塞页面，失败不影响正常使用
+refreshQualitySupport().catch(() => {});
 
 // 码率选择逻辑
 document.querySelectorAll('#bitrateSelector .control-item').forEach(item => {
@@ -987,7 +991,7 @@ document.querySelectorAll('#bitrateSelector .control-item').forEach(item => {
         resetAutoNetworkState();
         selectedBitrate = item.getAttribute('data-bitrate');
         setBitrateActive(selectedBitrate);
-        await refreshQualitySupport();
+        refreshQualitySupport().catch(() => {});
 
         if (screenTrack) {
             try {

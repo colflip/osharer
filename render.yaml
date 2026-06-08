@@ -6,3 +6,5 @@ services:
     envVars:
       - key: AGORA_APP_ID
         sync: false
+      - key: RENDER_GIT_COMMIT
+        sync: false
