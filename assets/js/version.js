@@ -28,11 +28,8 @@
         const el = ensureVersionEl();
         if (repoUrl) {
             el.href = repoUrl;
-            el.target = "_blank";
-            el.rel = "noopener noreferrer";
         } else {
             el.removeAttribute("href");
-            el.removeAttribute("target");
         }
         el.textContent = version;
         el.setAttribute("aria-label", `Deploy version ${version}`);
@@ -52,17 +49,6 @@
         el.setAttribute("aria-label", "Deploy version failed to load");
     }
 
-    function fetchGitHubVersion() {
-        if (!repo) return Promise.reject(new Error("Missing GitHub repo"));
-
-        return fetch(`https://api.github.com/repos/${repo}/commits/main`, { cache: "no-store" })
-            .then((response) => {
-                if (!response.ok) throw new Error("Failed to load GitHub version");
-                return response.json();
-            })
-            .then((data) => data.sha);
-    }
-
     function fetchBuildVersion() {
         return fetch("assets/version.json", { cache: "no-store" })
             .then((response) => {
@@ -72,8 +58,7 @@
             .then((data) => data.sha || data.shortSha);
     }
 
-    fetchGitHubVersion()
-        .catch(fetchBuildVersion)
+    fetchBuildVersion()
         .then(setVersion)
         .catch(setVersionError);
 })();

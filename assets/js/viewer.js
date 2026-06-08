@@ -145,6 +145,14 @@ document.getElementById('enterBtn').onclick = async () => {
         errorMsg.innerText = "请输入 4 位数字密码";
         return;
     }
+    if (/^(\d)\1+$/.test(pwd)) {
+        errorMsg.innerText = "密码格式无效，请联系分享者重新发起";
+        return;
+    }
+    if (/^(012|123|234|345|456|567|678|789|890)$/.test(pwd)) {
+        errorMsg.innerText = "密码格式无效，请联系分享者重新发起";
+        return;
+    }
 
     // 切换 UI
     enterBtn.disabled = true;
@@ -248,17 +256,19 @@ document.getElementById('enterBtn').onclick = async () => {
     }
 };
 
-// 自动聚焦 & 自动登录
+// 自动登录：URL 中带了 room + pwd 时自动加入
 window.onload = () => {
     const pwdInput = document.getElementById('pwdInput');
     const urlPwd = getHashParam('pwd');
     
     if (urlPwd && urlPwd.length === 4) {
         pwdInput.value = urlPwd;
-        // 延迟一小下确保 UI 已就绪（可选，但更稳健）
-        setTimeout(() => {
+        // 等 SDK 加载完成后再自动加入
+        ensureAgoraSdk().then(() => {
             document.getElementById('enterBtn').click();
-        }, 100);
+        }).catch(() => {
+            // SDK 加载失败，保留手动点击
+        });
     } else {
         pwdInput.focus();
     }
