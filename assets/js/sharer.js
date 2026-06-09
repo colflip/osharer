@@ -734,6 +734,36 @@ function setBitrateActive(bitrateKey) {
     });
 }
 
+// 清晰度选择逻辑
+function setQualityActive(qualityKey) {
+    document.querySelectorAll('#qualitySelector .control-item').forEach(item => {
+        const itemQuality = item.getAttribute('data-q');
+        item.classList.toggle('active', itemQuality === qualityKey);
+    });
+}
+
+document.querySelectorAll('#qualitySelector .control-item').forEach(item => {
+    item.onclick = () => {
+        if (document.getElementById('generateBtn').disabled && !screenTrack) return;
+        const nextQuality = item.getAttribute('data-q');
+        selectedQuality = nextQuality;
+        setQualityActive(selectedQuality);
+        updateShareOverview();
+
+        // 如果正在投屏，动态应用新配置
+        if (screenTrack) {
+            try {
+                applyScreenQuality(selectedQuality).catch((e) => {
+                    console.error("动态切换清晰度失败:", e);
+                });
+            } catch (e) {
+                console.error("动态切换清晰度失败:", e);
+            }
+        }
+    };
+});
+
+
 function resetAutoNetworkState() {
     autoNetworkState.downgraded = false;
     autoNetworkState.originalQuality = "";
