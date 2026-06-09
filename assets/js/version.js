@@ -1,61 +1,39 @@
 (function renderDeployVersion() {
-    const config = window.oSharerConfig || {};
-    const repo = config.GITHUB_REPO || "colflip/osharer";
-    const repoUrl = repo ? `https://github.com/${repo}` : "";
-
-    function ensureVersionEl() {
-        let el = document.getElementById("github-version");
-        if (el) return el;
-
-        el = document.createElement("a");
-        el.id = "github-version";
-        el.className = "github-version";
-        el.target = "_blank";
-        el.rel = "noopener noreferrer";
-        const container = document.querySelector(".container") || document.body;
-        container.appendChild(el);
-        return el;
-    }
+    var config = window.oSharerConfig || {};
+    var repo = config.GITHUB_REPO || "colflip/osharer";
+    var repoUrl = repo ? "https://github.com/" + repo : "";
 
     function displayVersion(value) {
         if (!value) return;
-        const el = ensureVersionEl();
-        if (repoUrl) {
-            el.href = repoUrl;
-            el.target = "_blank";
-            el.rel = "noopener noreferrer";
-        }
-        el.textContent = value;
+
+        // 更新 HTML 中硬编码的 #version-text 元素
+        var vt = document.getElementById("version-text");
+        if (vt) vt.textContent = value;
     }
 
     function displayError() {
-        const el = ensureVersionEl();
-        if (repoUrl) {
-            el.href = repoUrl;
-            el.target = "_blank";
-            el.rel = "noopener noreferrer";
-        }
-        el.textContent = "unknown";
+        var vt = document.getElementById("version-text");
+        if (vt) vt.textContent = "unknown";
     }
 
-    // 优先读取构建时注入的版本信息，避免 GitHub API 被墙
-    fetch("assets/version.json?_=" + Date.now(), { cache: "no-store" })
-        .then(response => {
+    // 每次都带时间戳，强制不命中缓存，获取最新版本号
+    fetch("assets/version.json?t=" + Date.now(), { cache: "no-store" })
+        .then(function(response) {
             if (!response.ok) throw new Error("Failed to load version");
             return response.json();
         })
-        .then(data => {
+        .then(function(data) {
             if (data.shortSha) {
                 displayVersion(data.shortSha);
                 return;
             }
         })
-        .catch(() => {
+        .catch(function() {
             // 本地开发 fallback 到 GitHub API
             if (!repo) return displayError();
-            fetch(`https://api.github.com/repos/${repo}/commits/main`, { cache: "no-store" })
-                .then(r => { if (!r.ok) throw new Error(); return r.json(); })
-                .then(d => displayVersion(d.sha.slice(0, 7)))
+            fetch("https://api.github.com/repos/" + repo + "/commits/main", { cache: "no-store" })
+                .then(function(r) { if (!r.ok) throw new Error(); return r.json(); })
+                .then(function(d) { displayVersion(d.sha.slice(0, 7)); })
                 .catch(displayError);
         });
 })();

@@ -57,12 +57,36 @@ if (process.env.RENDER_GIT_COMMIT) {
     }
 }
 
+const shortSha = (sha || "").slice(0, 7);
+
+// Replace existing <span id="version-text">...</span> before </body>, or add one
+function injectVersionIntoHtml(htmlPath) {
+    if (!fs.existsSync(htmlPath)) return;
+    let html = fs.readFileSync(htmlPath, "utf8");
+    const versionTag = `<span class="version-text" id="version-text">${shortSha}</span>`;
+
+    // Try to replace existing version-text element
+    if (/id="version-text"[^>]*>[^<]*<\/span>/.test(html)) {
+        html = html.replace(/id="version-text"[^>]*>[^<]*<\/span>/, `id="version-text">${shortSha}</span>`);
+    } else {
+        // No existing element, inject before </body>
+        html = html.replace("</body>", versionTag + "</body>");
+    }
+    fs.writeFileSync(htmlPath, html);
+}
+
+injectVersionIntoHtml(path.join(__dirname, "..", "sharer.html"));
+injectVersionIntoHtml(path.join(__dirname, "..", "index.html"));
+
+// version.json with buildTime for cache-busting
 const versionPayload = {
     sha: sha || "",
-    shortSha: (sha || "").slice(0, 7)
+    shortSha: shortSha,
+    buildTime: Date.now()
 };
-
 const versionDir = path.join(__dirname, "..", "assets");
 const versionPath = path.join(versionDir, "version.json");
 fs.mkdirSync(versionDir, { recursive: true });
 fs.writeFileSync(versionPath, `${JSON.stringify(versionPayload, null, 2)}\n`);
+
+console.log(`Version injected: ${shortSha}`);
