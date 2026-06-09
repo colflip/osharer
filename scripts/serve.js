@@ -5,6 +5,7 @@ const path = require("path");
 const PORT = 4173;
 const ROOT = path.join(__dirname, "..");
 
+// Read .env
 let appId = "";
 const envPath = path.join(ROOT, ".env");
 try {
@@ -29,6 +30,16 @@ const contentTypes = {
 };
 
 const server = http.createServer((req, res) => {
+    // /config.json endpoint
+    if (req.method === "GET" && req.url === "/config.json") {
+        res.writeHead(200, {
+            "Content-Type": "application/json",
+            "Cache-Control": "no-cache, no-store, must-revalidate"
+        });
+        res.end(JSON.stringify({ appId: appId || "" }));
+        return;
+    }
+
     let url = req.url.split("?")[0];
     if (url === "/") url = "/sharer.html";
     let filePath = path.normalize(path.join(ROOT, url));
@@ -38,9 +49,6 @@ const server = http.createServer((req, res) => {
     fs.readFile(filePath, (err, data) => {
         if (err) { res.writeHead(404); res.end("Not found"); return; }
         let body = data.toString();
-        if (ext === ".html" && appId) {
-            body = body.replace("__AGORA_APP_ID_VALUE__", appId);
-        }
         if (ext === ".json" && path.basename(filePath) === "version.json") {
             res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
         }
