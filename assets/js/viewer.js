@@ -1,4 +1,4 @@
-const APP_ID = window.oSharerConfig?.APP_ID || "";
+// APP_ID 在点击时动态读取，避免 config-loader.js 异步加载竞态
 
 function createShortId(prefix = "") {
     const randomPart = Math.random().toString(36).substring(2, 8);
@@ -136,7 +136,8 @@ document.getElementById('enterBtn').onclick = async () => {
     const pwd = document.getElementById('pwdInput').value.trim();
     const errorMsg = document.getElementById('error-msg');
 
-    if (!APP_ID) {
+    const appId = window.oSharerConfig?.APP_ID || "";
+    if (!appId) {
         errorMsg.innerText = "缺少声网 APP_ID，请联系分享者检查配置";
         return;
     }
@@ -198,7 +199,7 @@ document.getElementById('enterBtn').onclick = async () => {
             info.hasTouch
         ].join("|");
 
-        await client.join(APP_ID, channel, null, viewerUid);
+        await client.join(appId, channel, null, viewerUid);
         statusBar.innerText = "已进入房间，等待画面...";
 
         // 无后端状态探测：弱网下给足等待时间，避免误判为密码错误或分享已结束

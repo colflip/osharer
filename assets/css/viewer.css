@@ -146,3 +146,19 @@ video {
     padding: 50px;
     text-align: center;
 }
+
+.github-version {
+    position: absolute;
+    bottom: 20px;
+    right: 30px;
+    color: rgba(142, 142, 147, 0.74);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    text-decoration: none;
+    letter-spacing: 0;
+}
+
+.github-version:hover {
+    color: #007aff;
+}
