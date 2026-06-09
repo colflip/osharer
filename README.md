@@ -10,12 +10,18 @@ Web-based screen sharing built on Agora RTC. Share your screen via a link, and v
 
 1. 编辑 `.env` 文件，配置 `AGORA_APP_ID`
 2. 运行 `node scripts/serve.js`
-3. 打开 `http://localhost:4173/sharer.html`（投屏端）或 `http://localhost:4173/index.html`（观看端）
+3. 打开 `http://localhost:4173/sharer.html`
 
 ### 直接打开 / Open Directly
 
-HTML 文件中内联了 placeholder，直接使用会提示需要配置 APP_ID。你可以编辑 HTML 文件，将 `__AGORA_APP_ID_VALUE__` 替换为你的真实 APP_ID，然后双击打开即可。
+HTML 文件没有硬编码任何 APP_ID。如果找不到 `config.json`，会使用占位符。
 
-### 部署到任意平台 / Deploy
+### 部署 / Deploy
 
-在部署时执行 `node scripts/inject-env.js` 注入 APP_ID，然后上传生成的 HTML 文件。
+将项目文件上传到任意静态托管服务（Render、GitHub Pages、Nginx 等），然后**单独上传一个 `config.json` 文件**：
+
+```json
+{ "appId": "你的声网APP_ID" }
+```
+
+这个文件不会被 git 跟踪（已加入 `.gitignore`），密钥不会暴露在任何代码中。页面运行时自动 fetch 它。

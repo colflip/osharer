@@ -5,7 +5,6 @@ const path = require("path");
 const PORT = 4173;
 const ROOT = path.join(__dirname, "..");
 
-// Read .env
 let appId = "";
 const envPath = path.join(ROOT, ".env");
 try {
@@ -30,13 +29,20 @@ const contentTypes = {
 };
 
 const server = http.createServer((req, res) => {
-    // /config.json endpoint
     if (req.method === "GET" && req.url === "/config.json") {
-        res.writeHead(200, {
-            "Content-Type": "application/json",
-            "Cache-Control": "no-cache, no-store, must-revalidate"
-        });
-        res.end(JSON.stringify({ appId: appId || "" }));
+        // Try local config.json first, then fall back to .env
+        var localConfigPath = path.join(ROOT, "config.json");
+        if (fs.existsSync(localConfigPath)) {
+            var cfg = JSON.parse(fs.readFileSync(localConfigPath, "utf8"));
+            res.writeHead(200, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ appId: cfg.appId || "" }));
+        } else if (appId) {
+            res.writeHead(200, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ appId: appId }));
+        } else {
+            res.writeHead(404, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ appId: "" }));
+        }
         return;
     }
 
@@ -59,5 +65,5 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, () => {
     console.log(`oSharer running at http://localhost:${PORT}/`);
-    console.log(`APP_ID from .env: ${appId ? "yes" : "no"}`);
+    console.log(`APP_ID: ${appId ? "from .env" : "not set"}`);
 });
