@@ -27,7 +27,10 @@ function loadLocalEnv() {
 
 loadLocalEnv();
 
-const appId = process.env.AGORA_APP_ID || "";
+// Use AGORA_APP_ID from env if set, otherwise fall back to a placeholder
+// so local HTML opens work without needing a build step
+const AGORA_DEFAULT_APP_ID = "YOUR_AGORA_APP_ID";
+const appId = process.env.AGORA_APP_ID || AGORA_DEFAULT_APP_ID;
 const config = {
     APP_ID: appId,
     GITHUB_REPO: "colflip/osharer",

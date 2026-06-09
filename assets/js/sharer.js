@@ -1,4 +1,4 @@
-const APP_ID = window.oSharerConfig?.APP_ID || "";
+function getAppId() { return window.oSharerConfig?.APP_ID || ""; }
 let client, screenTrack;
 let countdownTimer = null; // 全局定时器引用
 let totalSecondsRemaining = 0; // 全局剩余秒数
@@ -1087,7 +1087,7 @@ document.getElementById('generateBtn').onclick = async () => {
     const pauseBtn = document.getElementById('pauseBtn');
     const status = document.getElementById('status');
 
-    if (!APP_ID) {
+    if (!getAppId()) {
         status.innerText = "🔴 分享失败: 缺少声网 APP_ID，请在 Render 环境变量中配置 AGORA_APP_ID 后重新部署。";
         return;
     }
@@ -1144,7 +1144,7 @@ document.getElementById('generateBtn').onclick = async () => {
             throw new Error(msg);
         }
 
-        await client.join(APP_ID, channel, null, "sharer");
+        await client.join(getAppId(), channel, null, "sharer");
         await client.publish(screenTrack);
 
         // 生成观看链接 (自适应当前部署域名，全网通用)
