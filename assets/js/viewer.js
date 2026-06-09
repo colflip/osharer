@@ -131,23 +131,37 @@ document.getElementById('pwdInput').addEventListener('input', function() {
     }
 });
 
+// Wait for config.json to load before joining the room
+function waitForConfig(timeoutMs = 10000) {
+    return new Promise((resolve, reject) => {
+        if (window.oSharerConfig?.APP_ID && window.oSharerConfig.APP_ID !== "YOUR_AGORA_APP_ID") {
+            resolve();
+            return;
+        }
+        const start = Date.now();
+        const check = setInterval(() => {
+            if (window.oSharerConfig?.APP_ID && window.oSharerConfig.APP_ID !== "YOUR_AGORA_APP_ID") {
+                clearInterval(check);
+                resolve();
+            } else if (Date.now() - start > timeoutMs) {
+                clearInterval(check);
+                reject(new Error("缺少声网 APP_ID，请联系分享者检查配置"));
+            }
+        }, 100);
+    });
+}
+
 document.getElementById('enterBtn').onclick = async () => {
     const enterBtn = document.getElementById('enterBtn');
     const pwd = document.getElementById('pwdInput').value.trim();
     const errorMsg = document.getElementById('error-msg');
-
-    const appId = window.oSharerConfig?.APP_ID || "";
-    if (!appId) {
-        errorMsg.innerText = "缺少声网 APP_ID，请联系分享者检查配置";
-        return;
-    }
 
     if (pwd.length !== 4) {
         errorMsg.innerText = "请输入 4 位数字密码";
         return;
     }
 
-    // 切换 UI
+    // 先验证密码，再等待 config 就绪，避免竞态条件
     enterBtn.disabled = true;
     errorMsg.innerText = "";
     document.getElementById('login-screen').style.display = 'none';
@@ -158,6 +172,8 @@ document.getElementById('enterBtn').onclick = async () => {
     showVideoPrompt();
 
     try {
+        await waitForConfig();
+        const appId = window.oSharerConfig.APP_ID;
         await ensureAgoraSdk();
         const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
         // 构造与分享端一致的频道名
@@ -256,10 +272,19 @@ window.onload = () => {
     
     if (urlPwd && urlPwd.length === 4) {
         pwdInput.value = urlPwd;
-        // 延迟一小下确保 UI 已就绪（可选，但更稳健）
-        setTimeout(() => {
-            document.getElementById('enterBtn').click();
-        }, 100);
+        // 等待 config.json 加载完成后再自动点击，避免竞态
+        setTimeout(async () => {
+            try {
+                await waitForConfig();
+                document.getElementById('enterBtn').click();
+            } catch (e) {
+                // config 加载失败，恢复登录界面
+                document.getElementById('login-screen').style.display = 'flex';
+                document.getElementById('video-container').style.display = 'none';
+                document.getElementById('error-msg').innerText = e.message;
+                document.getElementById('enterBtn').disabled = false;
+            }
+        }, 200);
     } else {
         pwdInput.focus();
     }
