@@ -14,4 +14,8 @@ Web-based screen sharing built on Agora RTC. Share your screen via a link, and v
 
 ### 直接打开 / Open Directly
 
-如果没有 `.env` 文件，直接双击 HTML 文件即可打开，会使用内置的占位 APP_ID。
+HTML 文件中内联了 placeholder，直接使用会提示需要配置 APP_ID。你可以编辑 HTML 文件，将 `__AGORA_APP_ID_VALUE__` 替换为你的真实 APP_ID，然后双击打开即可。
+
+### 部署到任意平台 / Deploy
+
+在部署时执行 `node scripts/inject-env.js` 注入 APP_ID，然后上传生成的 HTML 文件。

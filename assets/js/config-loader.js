@@ -1,9 +1,6 @@
-// Load AGORA_APP_ID at runtime.
-// - Local: serve via `node scripts/serve.js` which reads .env and injects it
-// - Remote/direct: use APP_ID from HTML inline script or hardcoded fallback
-
 (function loadConfig() {
-    var appId = window.__SHARER_APP_ID__ || "";
+    // 1. Build-injected value (from render.yaml buildCommand or inject-env.js)
+    var appId = window.__AGORA_APP_ID__ || "";
 
     window.oSharerConfig = {
         APP_ID: appId || "YOUR_AGORA_APP_ID",

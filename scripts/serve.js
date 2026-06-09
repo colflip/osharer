@@ -5,8 +5,7 @@ const path = require("path");
 const PORT = 4173;
 const ROOT = path.join(__dirname, "..");
 
-// Read .env
-let app_id = "";
+let appId = "";
 const envPath = path.join(ROOT, ".env");
 try {
     const lines = fs.readFileSync(envPath, "utf8").split(/\r?\n/);
@@ -17,11 +16,9 @@ try {
         if (idx === -1) continue;
         const key = trimmed.slice(0, idx).trim();
         let value = trimmed.slice(idx + 1).trim().replace(/^["']|["']$/g, "");
-        if (key === "AGORA_APP_ID") app_id = value;
+        if (key === "AGORA_APP_ID") appId = value;
     }
-} catch (e) {
-    // No .env
-}
+} catch (e) {}
 
 const contentTypes = {
     ".html": "text/html",
@@ -29,53 +26,30 @@ const contentTypes = {
     ".js": "application/javascript",
     ".json": "application/json",
     ".svg": "image/svg+xml",
-    ".png": "image/png",
-    ".jpg": "image/jpeg",
-    ".gif": "image/gif",
-    ".ico": "image/x-icon",
 };
 
 const server = http.createServer((req, res) => {
     let url = req.url.split("?")[0];
     if (url === "/") url = "/sharer.html";
-
-    let filePath = path.join(ROOT, url);
-    filePath = path.normalize(filePath);
-
-    if (!filePath.startsWith(ROOT)) {
-        res.writeHead(403);
-        res.end("Forbidden");
-        return;
-    }
-
+    let filePath = path.normalize(path.join(ROOT, url));
+    if (!filePath.startsWith(ROOT)) { res.writeHead(403); res.end("Forbidden"); return; }
     const ext = path.extname(filePath).toLowerCase();
     const contentType = contentTypes[ext] || "application/octet-stream";
-
     fs.readFile(filePath, (err, data) => {
-        if (err) {
-            res.writeHead(404);
-            res.end("Not found");
-            return;
-        }
-
+        if (err) { res.writeHead(404); res.end("Not found"); return; }
         let body = data.toString();
-
-        // Inject AGORA_APP_ID from .env into HTML files
-        if (ext === ".html" && app_id) {
-            body = body.replace(/YOUR_AGORA_APP_ID/g, app_id);
+        if (ext === ".html" && appId) {
+            body = body.replace("__AGORA_APP_ID_VALUE__", appId);
         }
-
-        // Cache bust for version.json
         if (ext === ".json" && path.basename(filePath) === "version.json") {
             res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
         }
-
         res.writeHead(200, { "Content-Type": contentType });
         res.end(body);
     });
 });
 
 server.listen(PORT, () => {
-    console.log(`oSharer server running at http://localhost:${PORT}/`);
-    console.log(`APP_ID from .env: ${app_id ? "yes" : "no (using placeholder)"}`);
+    console.log(`oSharer running at http://localhost:${PORT}/`);
+    console.log(`APP_ID from .env: ${appId ? "yes" : "no"}`);
 });

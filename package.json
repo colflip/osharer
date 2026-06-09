@@ -2,5 +2,5 @@
     "name": "osharer",
     "version": "0.1.0",
     "private": true,
-    "description": "Web-based screen sharing built on Agora RTC. Open HTML files directly — or run `node scripts/serve.js` to read AGORA_APP_ID from .env."
+    "description": "Web-based screen sharing built on Agora RTC. Open HTML files directly or run with `node scripts/serve.js`."
 }
