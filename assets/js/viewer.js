@@ -124,7 +124,7 @@ function showVideoPrompt() {
     }, 6000);
 }
 
-// 4 位邀请码自动进入逻辑
+// 4 位邀请码自动进入逻辑（保留以支持手动输入场景）
 document.getElementById('pwdInput').addEventListener('input', function() {
     if (this.value.length === 4) {
         document.getElementById('enterBtn').click();
@@ -151,19 +151,25 @@ function waitForConfig(timeoutMs = 10000) {
     });
 }
 
-document.getElementById('enterBtn').onclick = async () => {
-    const enterBtn = document.getElementById('enterBtn');
-    const pwd = document.getElementById('pwdInput').value.trim();
+// ===== 自动进入房间（主流程）=====
+async function autoJoin() {
+    const pwdInput = document.getElementById('pwdInput');
     const errorMsg = document.getElementById('error-msg');
-
-    if (pwd.length !== 4) {
-        errorMsg.innerText = "请输入 4 位数字密码";
+    const enterBtn = document.getElementById('enterBtn');
+    
+    // 从 URL 获取密码
+    const urlPwd = getHashParam('pwd');
+    if (!urlPwd || urlPwd.length !== 4) {
+        // 没有密码则展示登录界面
+        document.getElementById('login-screen').style.display = 'flex';
+        document.getElementById('video-container').style.display = 'none';
+        pwdInput.focus();
         return;
     }
 
-    // 先验证密码，再等待 config 就绪，避免竞态条件
-    enterBtn.disabled = true;
-    errorMsg.innerText = "";
+    const pwd = urlPwd;
+    
+    // 默认直接进入视频页面
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('video-container').style.display = 'block';
     const statusBar = document.getElementById('status-bar');
@@ -221,14 +227,13 @@ document.getElementById('enterBtn').onclick = async () => {
         // 无后端状态探测：弱网下给足等待时间，避免误判为密码错误或分享已结束
         setTimeout(async () => {
             if (client.remoteUsers.length === 0) {
+                // 邀请码错误或分享已结束 → 回退到登录界面
                 errorMsg.innerText = "🔇 邀请码错误或分享已结束";
                 await client.leave();
-                // 恢复登录界面并清空输入
                 document.getElementById('login-screen').style.display = 'flex';
                 document.getElementById('video-container').style.display = 'none';
                 document.getElementById('pwdInput').value = "";
                 document.getElementById('pwdInput').focus();
-                enterBtn.disabled = false;
             }
         }, 8000);
 
@@ -258,34 +263,12 @@ document.getElementById('enterBtn').onclick = async () => {
     } catch (e) {
         console.error(e);
         errorMsg.innerText = e.message || "进入失败：可能密码错误或连接超时";
+        // 异常时回退到登录界面
         document.getElementById('login-screen').style.display = 'flex';
         document.getElementById('video-container').style.display = 'none';
-        enterBtn.disabled = false;
         document.getElementById('pwdInput').focus();
     }
-};
+}
 
-// 自动聚焦 & 自动登录
-window.onload = () => {
-    const pwdInput = document.getElementById('pwdInput');
-    const urlPwd = getHashParam('pwd');
-    
-    if (urlPwd && urlPwd.length === 4) {
-        pwdInput.value = urlPwd;
-        // 等待 config.json 加载完成后再自动点击，避免竞态
-        setTimeout(async () => {
-            try {
-                await waitForConfig();
-                document.getElementById('enterBtn').click();
-            } catch (e) {
-                // config 加载失败，恢复登录界面
-                document.getElementById('login-screen').style.display = 'flex';
-                document.getElementById('video-container').style.display = 'none';
-                document.getElementById('error-msg').innerText = e.message;
-                document.getElementById('enterBtn').disabled = false;
-            }
-        }, 200);
-    } else {
-        pwdInput.focus();
-    }
-};
+// 页面加载后自动进入房间
+window.onload = autoJoin;

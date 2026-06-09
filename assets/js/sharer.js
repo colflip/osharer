@@ -678,7 +678,6 @@ const QUALITY_LABELS = {
     pro_2k: "2K",
     pro_4k: "4K"
 };
-const FALLBACK_QUALITY_KEYS = new Set(["fluent", "standard", "high"]);
 const BITRATE_PRESETS = {
     low: { minScale: 0.65, maxScale: 0.65 },
     standard: { minScale: 1, maxScale: 1 },
@@ -693,7 +692,6 @@ const BITRATE_LABELS = {
 };
 let selectedQuality = "pro_2k";
 let selectedBitrate = "standard";
-const qualitySupport = new Map();
 
 function getEncoderConfig(qualityKey = selectedQuality) {
     const config = QUALITY_CONFIGS[qualityKey];
@@ -761,99 +759,6 @@ async function applyScreenQuality(qualityKey) {
     updateShareOverview();
 }
 
-function setQualityActive(qualityKey) {
-    document.querySelectorAll('#qualitySelector .control-item').forEach(item => {
-        const itemQuality = item.getAttribute('data-q');
-        item.classList.toggle('active', itemQuality === qualityKey && !item.classList.contains('disabled'));
-    });
-}
-
-function setQualityDisabled(qualityKey, reason) {
-    const item = document.querySelector(`#qualitySelector .control-item[data-q="${qualityKey}"]`);
-    if (!item) return;
-    const disabled = Boolean(reason);
-    item.classList.toggle('disabled', disabled);
-    item.setAttribute('aria-disabled', String(disabled));
-    item.title = disabled ? reason : "";
-    qualitySupport.set(qualityKey, { disabled, reason: reason || "" });
-}
-
-function isQualityDisabled(qualityKey) {
-    return Boolean(qualitySupport.get(qualityKey)?.disabled);
-}
-
-function selectBestAvailableQuality(preferredQuality = selectedQuality) {
-    const ordered = ["pro_4k", "pro_2k", "high", "standard", "fluent"];
-    if (!isQualityDisabled(preferredQuality)) return preferredQuality;
-    return ordered.find((qualityKey) => !isQualityDisabled(qualityKey)) || "fluent";
-}
-
-async function getMediaCapability(config) {
-    if (!navigator.mediaCapabilities || typeof navigator.mediaCapabilities.encodingInfo !== "function") {
-        return null;
-    }
-
-    try {
-        return await Promise.race([
-            navigator.mediaCapabilities.encodingInfo({
-                type: "webrtc",
-                video: {
-                    contentType: "video/VP8",
-                    width: config.width,
-                    height: config.height,
-                    bitrate: config.bitrateMax * 1000,
-                    framerate: config.frameRate
-                }
-            }),
-            new Promise(resolve => setTimeout(() => resolve(null), 1500))
-        ]);
-    } catch (err) {
-        console.warn("清晰度能力检测失败:", err);
-        return null;
-    }
-}
-
-function getHardwareLimitReason(config) {
-    const cores = navigator.hardwareConcurrency || 0;
-    const memory = navigator.deviceMemory || 0;
-    const pixels = config.width * config.height;
-
-    if (pixels >= 3840 * 2160 && ((cores && cores < 8) || (memory && memory < 8))) {
-        return "当前设备性能信息偏低，已关闭 4K 选项";
-    }
-    if (config.frameRate >= 60 && cores && cores < 6) {
-        return "当前设备 CPU 核心数偏低，已关闭高帧率选项";
-    }
-    return "";
-}
-
-async function refreshQualitySupport() {
-    const checks = await Promise.all(Object.keys(QUALITY_CONFIGS).map(async (qualityKey) => {
-        const encoderConfig = getEncoderConfig(qualityKey);
-        const capability = await getMediaCapability(encoderConfig);
-        let reason = "";
-
-        if (capability && capability.supported === false) {
-            reason = "当前浏览器/设备不支持该清晰度编码";
-        } else if (capability && capability.smooth === false) {
-            reason = "当前设备预计无法流畅分享该清晰度";
-        } else if (!capability) {
-            reason = getHardwareLimitReason(encoderConfig);
-        }
-        if (FALLBACK_QUALITY_KEYS.has(qualityKey)) reason = "";
-
-        return [qualityKey, reason];
-    }));
-
-    checks.forEach(([qualityKey, reason]) => setQualityDisabled(qualityKey, reason));
-
-    const nextQuality = selectBestAvailableQuality(selectedQuality);
-    if (nextQuality !== selectedQuality) {
-        selectedQuality = nextQuality;
-        setQualityActive(selectedQuality);
-        updateShareOverview();
-    }
-}
 
 async function applyAutoNetworkConfig(nextQuality, nextBitrate) {
     if (!screenTrack) return;
@@ -870,7 +775,6 @@ async function applyAutoNetworkConfig(nextQuality, nextBitrate) {
 
     selectedQuality = nextQuality;
     selectedBitrate = nextBitrate;
-    setQualityActive(selectedQuality);
     setBitrateActive(selectedBitrate);
     updateShareStatus();
 }
@@ -958,32 +862,6 @@ function bindClientHealthEvents(statusEl) {
     });
 }
 
-// 清晰度选择逻辑
-document.querySelectorAll('#qualitySelector .control-item').forEach(item => {
-    item.onclick = async () => {
-        if (document.getElementById('generateBtn').disabled && !screenTrack) return; // 只有在未开始投屏时才禁用
-        const nextQuality = item.getAttribute('data-q');
-        if (isQualityDisabled(nextQuality)) return;
-        resetAutoNetworkState();
-        selectedQuality = nextQuality;
-        setQualityActive(selectedQuality);
-        updateShareOverview();
-
-        // 如果正在投屏，动态应用新配置
-        if (screenTrack) {
-            try {
-                await applyScreenQuality(selectedQuality);
-                console.log("清晰度已动态切换为:", selectedQuality);
-            } catch (e) {
-                console.error("动态切换清晰度失败:", e);
-            }
-        }
-    };
-});
-
-// 品质检测不阻塞页面，失败不影响正常使用
-refreshQualitySupport().catch(() => {});
-
 // 码率选择逻辑
 document.querySelectorAll('#bitrateSelector .control-item').forEach(item => {
     item.onclick = async () => {
@@ -991,12 +869,8 @@ document.querySelectorAll('#bitrateSelector .control-item').forEach(item => {
         resetAutoNetworkState();
         selectedBitrate = item.getAttribute('data-bitrate');
         setBitrateActive(selectedBitrate);
-        refreshQualitySupport().catch(() => {});
-
         if (screenTrack) {
             try {
-                selectedQuality = selectBestAvailableQuality(selectedQuality);
-                setQualityActive(selectedQuality);
                 await applyScreenQuality(selectedQuality);
                 console.log("码率已动态切换为:", selectedBitrate);
             } catch (e) {
