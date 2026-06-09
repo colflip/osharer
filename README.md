@@ -18,10 +18,20 @@ HTML 文件没有硬编码任何 APP_ID。如果找不到 `config.json`，会使
 
 ### 部署 / Deploy
 
-将项目文件上传到任意静态托管服务（Render、GitHub Pages、Nginx 等），然后**单独上传一个 `config.json` 文件**：
+#### Render Static Site
+
+1. 在 Render 服务的 Environment 里添加 `AGORA_APP_ID`
+2. **Build Command**: `node scripts/render-build.js`
+3. **Publish Directory**: `.`
+
+每次 push 到 GitHub，Render 会自动拉取并执行 Build Command，从环境变量生成 `config.json`，再发布到 CDN。`config.json` 不进 git，APP_ID 也不在源码里。
+
+> 注意：Static Site 没有运行时，最终 `config.json` 会随静态资源公开下发，访问者仍能看到 APP_ID。声网鉴权请配合 Token / App Certificate。
+
+#### 其他静态托管
+
+手动放一份 `config.json` 到部署目录即可：
 
 ```json
 { "appId": "你的声网APP_ID" }
 ```
-
-这个文件不会被 git 跟踪（已加入 `.gitignore`），密钥不会暴露在任何代码中。页面运行时自动 fetch 它。
