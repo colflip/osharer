@@ -1088,7 +1088,7 @@ document.getElementById('generateBtn').onclick = async () => {
     const status = document.getElementById('status');
 
     if (!getAppId()) {
-        status.innerText = "🔴 分享失败: 缺少声网 APP_ID，请在 Render 环境变量中配置 AGORA_APP_ID 后重新部署。";
+        status.innerText = "🔴 分享失败: 缺少声网 APP_ID，请检查配置";
         return;
     }
 
@@ -1147,7 +1147,7 @@ document.getElementById('generateBtn').onclick = async () => {
         await client.join(getAppId(), channel, null, "sharer");
         await client.publish(screenTrack);
 
-        // 生成观看链接 (自适应当前部署域名，全网通用)
+        // 生成观看链接 (自适应当前域名)
         const baseUrl = window.location.origin + window.location.pathname.replace('sharer.html', '');
         const hashParams = new URLSearchParams({ room: roomId, pwd: password });
         const watchUrl = `${baseUrl}index.html#${hashParams.toString()}`;

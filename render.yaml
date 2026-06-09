@@ -1,8 +1,0 @@
-services:
-  - type: static
-    name: sharer
-    buildCommand: AGORA_APP_ID="${AGORA_APP_ID}" npm run build
-    staticPublishPath: .
-    envVars:
-      - key: AGORA_APP_ID
-        sync: true

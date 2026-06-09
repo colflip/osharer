@@ -1,4 +1,4 @@
-(function renderDeployVersion() {
+(function renderVersion() {
     var config = window.oSharerConfig || {};
     var repo = config.GITHUB_REPO || "colflip/osharer";
     var repoUrl = repo ? "https://github.com/" + repo : "";

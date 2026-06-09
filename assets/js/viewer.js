@@ -137,7 +137,7 @@ document.getElementById('enterBtn').onclick = async () => {
     const errorMsg = document.getElementById('error-msg');
 
     if (!APP_ID) {
-        errorMsg.innerText = "缺少声网 APP_ID，请联系分享者检查部署配置";
+        errorMsg.innerText = "缺少声网 APP_ID，请联系分享者检查配置";
         return;
     }
 

@@ -2,10 +2,9 @@
     "name": "osharer",
     "version": "0.1.0",
     "private": true,
-    "description": "Static Agora-based screen sharing pages.",
+    "description": "Web-based screen sharing built on Agora RTC. Open HTML files directly — no build required.",
     "scripts": {
-        "build": "node scripts/write-version.js",
         "serve": "python3 -m http.server 4173",
-        "check": "npm run build && node --check scripts/write-version.js && node --check assets/js/config.js && node --check assets/js/version.js && node --check assets/js/agora-loader.js && node --check assets/js/viewer.js && node --check assets/js/sharer.js"
+        "check": "node --check scripts/write-version.js && node --check assets/js/config-loader.js && node --check assets/js/agora-loader.js && node --check assets/js/viewer.js && node --check assets/js/sharer.js"
     }
 }
