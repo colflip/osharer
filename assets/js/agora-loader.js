@@ -36,14 +36,16 @@
         if (window.AgoraRTC) return window.AgoraRTC;
         if (!agoraSdkPromise) {
             agoraSdkPromise = (async () => {
+                // 冷启动实例下，1.2MB 的本地 SDK 首字节可能很慢，放宽到 20s。
                 for (const src of window.oSharerConfig.AGORA_SDK_SOURCES) {
                     try {
-                        await loadScriptWithTimeout(src);
+                        await loadScriptWithTimeout(src, src.includes("AgoraRTC") ? 20000 : 9000);
                         if (window.AgoraRTC) return window.AgoraRTC;
                     } catch (err) {
                         console.warn("Agora SDK 加载失败:", src, err);
                     }
                 }
+                agoraSdkPromise = null; // 允许重试时重新加载，否则失败的 promise 会被永久缓存
                 throw new Error("投屏组件加载失败，请刷新页面或切换网络后重试");
             })();
         }
