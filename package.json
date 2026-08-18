@@ -2,5 +2,16 @@
     "name": "osharer",
     "version": "0.1.0",
     "private": true,
-    "description": "Web-based screen sharing built on Agora RTC. Open HTML files directly or run with `node scripts/serve.js`."
+    "description": "Web-based screen sharing built on Agora RTC. Run with `node server.js`.",
+    "engines": {
+        "node": ">=18"
+    },
+    "scripts": {
+        "dev": "node server.js",
+        "build": "node scripts/render-build.js",
+        "start": "node server.js"
+    },
+    "dependencies": {
+        "agora-token": "^2.0.5"
+    }
 }

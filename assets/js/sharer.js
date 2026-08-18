@@ -1048,7 +1048,14 @@ document.getElementById('generateBtn').onclick = async () => {
             throw new Error(msg);
         }
 
-        await client.join(getAppId(), channel, null, "sharer");
+        status.innerText = preflightNotice
+            ? `${preflightNotice}\n正在获取连接凭证...`
+            : "正在获取连接凭证...";
+        const token = await fetchAgoraToken(channel, "sharer");
+
+        await client.join(getAppId(), channel, token, "sharer");
+        // 不限时分享可能远超 token 有效期，必须挂上续期
+        bindTokenRenewal(client, channel, "sharer", appendShareNotice);
         await client.publish(screenTrack);
 
         // 生成观看链接 (自适应当前域名)

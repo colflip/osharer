@@ -221,7 +221,14 @@ async function autoJoin() {
             info.hasTouch
         ].join("|");
 
-        await client.join(appId, channel, null, viewerUid);
+        statusBar.innerText = "正在获取连接凭证...";
+        const token = await fetchAgoraToken(channel, viewerUid);
+
+        await client.join(appId, channel, token, viewerUid);
+        bindTokenRenewal(client, channel, viewerUid, (msg) => {
+            statusBar.style.display = "block";
+            statusBar.innerText = msg;
+        });
         statusBar.innerText = "已进入房间，等待画面...";
 
         // 无后端状态探测：弱网下给足等待时间，避免误判为密码错误或分享已结束
