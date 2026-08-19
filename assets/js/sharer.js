@@ -125,26 +125,23 @@ function formatDuration(openedAt, endedAt) {
     return `${seconds}秒`;
 }
 
+// 字段布局与 viewer.js 的 getExtendedDeviceInfo 严格一致，任何变更必须两端同步。
+// 历史字段（deviceType/platform/timeZone/hasTouch）已删除，协议不再包含它们，不要补回。
 function parseViewerInfo(viewerUid) {
     const p = viewerUid.split("|");
     return {
         version: "v2",
         osBrowser: p[2] || "未知",
-        deviceType: p[3] || "Device",
-        browser: p[4] || "Browser",
-        platform: p[5] || "Other",
-        res: p[6] || "未知",
-        dpr: p[7] || "1",
-        net: p[8] || "未知",
-        lang: p[9] || "zh",
-        theme: p[10] || "light",
-        uid: p[11] || "N/A",
-        visitorId: p[11] || "N/A",
-        sessionId: p[12] || "N/A",
-        fp: p[13] || "N/A",
-        visits: p[14] || "1",
-        timeZone: p[15] || "unknown",
-        hasTouch: p[16] || "unknown"
+        browser: p[3] || "Browser",
+        res: p[4] || "未知",
+        dpr: p[5] || "1",
+        net: p[6] || "未知",
+        lang: p[7] || "zh",
+        theme: p[8] || "light",
+        visitorId: p[9] || "N/A",
+        sessionId: p[10] || "N/A",
+        fp: p[11] || "N/A",
+        visits: p[12] || "1"
     };
 }
 
@@ -166,7 +163,7 @@ function formatDecimal(value, digits = 2) {
 }
 
 function getVisitorId(info = {}) {
-    return info.visitorId || info.uid || info.fp || "N/A";
+    return info.visitorId || info.fp || "N/A";
 }
 
 function getBrowserSupport(info = {}) {

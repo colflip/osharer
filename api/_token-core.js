@@ -79,4 +79,4 @@ function issueToken(input) {
     };
 }
 
-module.exports = { issueToken, CHANNEL_RE, resolveTtlSeconds };
+module.exports = { issueToken };

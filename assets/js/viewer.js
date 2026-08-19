@@ -6,17 +6,9 @@ function createShortId(prefix = "") {
     return `${prefix}${randomPart}${timePart}`;
 }
 
-function getDeviceType(ua) {
-    if (/iPad|Tablet/i.test(ua)) return "Tablet";
-    if (/Android/i.test(ua) && !/Mobile/i.test(ua)) return "Tablet";
-    if (/iPhone|iPod|Android|Mobile/i.test(ua)) return "Mobile";
-    return "Desktop";
-}
-
-// 增强版设备信息获取
 function getExtendedDeviceInfo() {
     const ua = navigator.userAgent;
-    
+
     // 1. 平台与浏览器 (核心标识)
     let platform = "Other";
     if (/iPhone|iPad|iPod/i.test(ua)) platform = "iOS";
@@ -30,7 +22,6 @@ function getExtendedDeviceInfo() {
     else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) browser = "Safari";
     else if (/Firefox/i.test(ua)) browser = "Firefox";
     const osBrowser = `${platform}_${browser}`;
-    const deviceType = getDeviceType(ua);
 
     // 2. 屏幕属性
     const res = `${window.screen.width}x${window.screen.height}`;
@@ -45,8 +36,6 @@ function getExtendedDeviceInfo() {
     // 4. 语言与主题
     const lang = (navigator.language || "zh").split('-')[0]; // 取简码如 zh, en
     const theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? "dark" : "light";
-    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "unknown";
-    const hasTouch = navigator.maxTouchPoints > 0 ? "touch" : "no-touch";
 
     // 5. 持久化访客 ID、单次会话 ID 与访问次数
     let visitorId = localStorage.getItem('sc_visitor_id') || localStorage.getItem('sc_uid');
@@ -56,7 +45,7 @@ function getExtendedDeviceInfo() {
     localStorage.setItem('sc_visitor_id', visitorId);
     localStorage.setItem('sc_uid', visitorId);
     const sessionId = createShortId("s_");
-    
+
     let visits = parseInt(localStorage.getItem('sc_visits') || '0') + 1;
     localStorage.setItem('sc_visits', visits.toString());
 
@@ -71,9 +60,7 @@ function getExtendedDeviceInfo() {
 
     return {
         osBrowser,
-        platform,
         browser,
-        deviceType,
         res,
         dpr,
         net,
@@ -82,9 +69,7 @@ function getExtendedDeviceInfo() {
         visitorId,
         sessionId,
         fingerprint,
-        visits,
-        timeZone,
-        hasTouch
+        visits
     };
 }
 
@@ -205,9 +190,7 @@ async function autoJoin() {
             "viewer",
             "v2",
             info.osBrowser,
-            info.deviceType,
             info.browser,
-            info.platform,
             info.res,
             info.dpr,
             info.net,
@@ -216,9 +199,7 @@ async function autoJoin() {
             info.visitorId,
             info.sessionId,
             info.fingerprint,
-            info.visits,
-            info.timeZone,
-            info.hasTouch
+            info.visits
         ].join("|");
 
         statusBar.innerText = "正在获取连接凭证...";
