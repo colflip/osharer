@@ -335,8 +335,13 @@
         } catch (e) {
             console.error(e);
             if (errorMsg) errorMsg.innerText = e.message || "进入失败：可能密码错误或连接超时";
-            if (retryBtnBox) retryBtnBox.style.display = "block";
-            // 保留视频界面，允许用户点击重试，不再踢回登录页
+            // 恢复登录界面，允许重新输入密码或点击重试
+            var loginScreen = document.getElementById("login-screen");
+            var videoContainerEl = document.getElementById("video-container");
+            if (loginScreen) loginScreen.style.display = "flex";
+            if (videoContainerEl) videoContainerEl.style.display = "none";
+            if (retryBtnBox) retryBtnBox.style.display = "none";
+            if (pwdInput) pwdInput.focus();
         }
     }
 
@@ -832,10 +837,30 @@
         document.documentElement.style.setProperty("--share-side-top", top + "px");
     }
 
+    function syncShareSidePanelHPosition() {
+        var container = document.querySelector("#share-screen .container");
+        if (!container) return;
+        var rect = container.getBoundingClientRect();
+        var gap = 0;
+        var rightMargin = 8;
+        var leftCardWidth = 285;
+        var rightCardWidth = 431;
+        var statsRight = Math.round(window.innerWidth - rect.left + gap);
+        var previewLeft = Math.round(rect.right + gap);
+        var previewWidth = Math.round(rightCardWidth);
+        var root = document.documentElement.style;
+        root.setProperty("--side-stats-right", statsRight + "px");
+        root.setProperty("--side-preview-left", previewLeft + "px");
+        root.setProperty("--side-preview-width", previewWidth + "px");
+    }
+
     function setShareSidePanelsVisible(visible) {
+        if (visible) {
+            syncShareSidePanelHPosition();
+            syncShareSidePanelTop();
+        }
         document.getElementById("shareSideStats") && document.getElementById("shareSideStats").classList.toggle("active", visible);
         document.getElementById("shareSidePreview") && document.getElementById("shareSidePreview").classList.toggle("active", visible);
-        if (visible) requestAnimationFrame(syncShareSidePanelTop);
     }
 
     function resetSharePreview() {
@@ -851,7 +876,7 @@
         var dims = getScreenTrackDimensions();
         var ratio = dims.width / dims.height;
         var previewPanel = document.getElementById("shareSidePreview");
-        var sideWidth = Math.floor(previewPanel && previewPanel.getBoundingClientRect ? previewPanel.getBoundingClientRect().width : 300);
+        var sideWidth = Math.floor(previewPanel && previewPanel.getBoundingClientRect ? previewPanel.getBoundingClientRect().width : 570);
         var previewWidth = ratio < 1 ? Math.floor(sideWidth * 0.5) : sideWidth;
         previewEl.style.aspectRatio = dims.width + " / " + dims.height;
         previewEl.style.width = previewWidth + "px";
@@ -1174,7 +1199,7 @@
                 setBitrateActive(selectedBitrate);
                 if (screenTrack) {
                     try {
-                        await applyScreenQuality(selectedQuality);
+                        await applyScreenQuality(selectedQuality, selectedBitrate);
                         console.log("码率已动态切换为:", selectedBitrate);
                     } catch (e) {
                         console.error("动态切换码率失败:", e);
@@ -1509,6 +1534,7 @@
 
         window.addEventListener("resize", function () {
             syncShareSidePanelTop();
+            syncShareSidePanelHPosition();
             sizeSharePreview(document.getElementById("sharePreviewVideo"));
         });
         window.addEventListener("scroll", syncShareSidePanelTop, { passive: true });

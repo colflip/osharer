@@ -39,10 +39,13 @@ body {
     padding: 30px 20px;
 }
 
+#share-screen { width: 100%; }
+
 .container {
     position: relative;
     width: 100%;
-    max-width: 680px;
+    max-width: 724px;
+    margin: 0 auto;
     background: #1c1c1e;
     padding: 35px 30px;
     border-radius: 24px;
@@ -219,7 +222,7 @@ h2 {
 .share-preview-video {
     position: relative;
     display: flex;
-    width: min(100%, 300px);
+    width: 100%;
     min-height: 0;
     aspect-ratio: 16 / 9;
     align-self: flex-start;
@@ -389,16 +392,17 @@ h2 {
 .share-side-panel.active { display: flex; }
 
 .share-side-stats {
-    right: calc(50% + 386px);
+    right: var(--side-stats-right, -9999px);
+    width: 285px;
     align-items: flex-start;
     justify-content: flex-start;
 }
 
 .share-side-preview {
-    left: calc(50% + 386px);
+    left: var(--side-preview-left, -9999px);
     align-items: flex-start;
     justify-content: flex-start;
-    width: calc(50vw - 406px);
+    width: var(--side-preview-width, 500px);
 }
 
 .side-panel-inner {
@@ -417,12 +421,13 @@ h2 {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    padding: 8px;
 }
 
 .side-stat-block {
     min-width: 0;
-    width: 128px;
-    padding: 8px 10px;
+    width: 154px;
+    padding: 8px;
     background: rgba(44, 44, 46, 0.72);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 9px;
@@ -432,24 +437,24 @@ h2 {
 
 .side-stat-label {
     display: block;
-    margin-bottom: 4px;
+    margin-bottom: 5px;
     color: #8e8e93;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 600;
 }
 
 .side-stat-block strong {
     display: block;
-    margin-bottom: 3px;
+    margin-bottom: 4px;
     color: #fff;
-    font-size: 19px;
+    font-size: 23px;
     line-height: 1.1;
 }
 
 .side-stat-block span:last-child {
     display: block;
     color: #a1a1a6;
-    font-size: 11px;
+    font-size: 13px;
     line-height: 1.25;
     word-break: break-word;
 }
@@ -711,7 +716,7 @@ body.theme-light .tag-res { background: rgba(255, 159, 10, 0.16); color: #b86b00
     .share-side-panel {
         position: static;
         width: 100%;
-        max-width: 680px;
+        max-width: 884px;
         margin: 0 auto 16px;
     }
     .share-side-preview { margin: 16px auto 0; }
@@ -722,8 +727,11 @@ body.theme-light .tag-res { background: rgba(255, 159, 10, 0.16); color: #b86b00
     .container { padding: 28px 18px; }
     .page-header { flex-direction: column; gap: 12px; }
     .theme-toggle { position: static; }
-    .side-stat-block strong { font-size: 24px; }
+    .side-stat-block strong { font-size: 29px; }
 }
+
+/* 分享端默认隐藏观看端 */
+#viewer-screen { display: none; }
 
 /* =========================================================
    观看端 — html[data-mode="viewer"] 作用域
