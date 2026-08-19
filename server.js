@@ -126,7 +126,7 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
-    const filePath = path.normalize(path.join(ROOT, url === "/" ? "/sharer.html" : url));
+    const filePath = path.normalize(path.join(ROOT, url === "/" ? "/index.html" : url));
     if (!filePath.startsWith(ROOT)) {
         res.writeHead(403);
         res.end("Forbidden");
