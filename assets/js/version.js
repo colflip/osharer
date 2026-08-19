@@ -1,7 +1,5 @@
 (function renderVersion() {
     var config = window.oSharerConfig || {};
-    var repo = config.GITHUB_REPO || "colflip/osharer";
-    var repoUrl = repo ? "https://github.com/" + repo : "";
 
     function displayVersion(value) {
         if (!value) return;
@@ -28,12 +26,5 @@
                 return;
             }
         })
-        .catch(function() {
-            // 本地开发 fallback 到 GitHub API
-            if (!repo) return displayError();
-            fetch("https://api.github.com/repos/" + repo + "/commits/main", { cache: "no-store" })
-                .then(function(r) { if (!r.ok) throw new Error(); return r.json(); })
-                .then(function(d) { displayVersion(d.sha.slice(0, 7)); })
-                .catch(displayError);
-        });
+        .catch(displayError);
 })();

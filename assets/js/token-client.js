@@ -5,9 +5,7 @@
 
 (() => {
     const TOKEN_ENDPOINT = "/api/token";
-    // 冷启动实例下首个 token 请求可能要等待服务唤醒，放宽到 20s，
-    // 失败则优雅回退静态模式（不阻断观看）。
-    const REQUEST_TIMEOUT_MS = 20000;
+    const REQUEST_TIMEOUT_MS = 8000;
 
     async function fetchAgoraToken(channel, uid) {
         const controller = new AbortController();

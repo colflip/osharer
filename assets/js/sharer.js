@@ -127,46 +127,24 @@ function formatDuration(openedAt, endedAt) {
 
 function parseViewerInfo(viewerUid) {
     const p = viewerUid.split("|");
-    if (p[1] === "v2") {
-        return {
-            version: "v2",
-            osBrowser: p[2] || "未知",
-            deviceType: p[3] || "Device",
-            browser: p[4] || "Browser",
-            platform: p[5] || "Other",
-            res: p[6] || "未知",
-            dpr: p[7] || "1",
-            net: p[8] || "未知",
-            lang: p[9] || "zh",
-            theme: p[10] || "light",
-            uid: p[11] || "N/A",
-            visitorId: p[11] || "N/A",
-            sessionId: p[12] || "N/A",
-            fp: p[13] || "N/A",
-            visits: p[14] || "1",
-            timeZone: p[15] || "unknown",
-            hasTouch: p[16] || "unknown"
-        };
-    }
-
     return {
-        version: "v1",
-        osBrowser: p[1] || "未知",
-        deviceType: "Device",
-        browser: "Browser",
-        platform: "Other",
-        res: p[2] || "未知",
-        dpr: p[3] || "1",
-        net: p[4] || "未知",
-        lang: p[5] || "zh",
-        theme: p[6] || "light",
-        uid: p[7] || "N/A",
-        visitorId: p[7] || "N/A",
-        sessionId: "N/A",
-        fp: p[8] || "N/A",
-        visits: p[9] || "1",
-        timeZone: "unknown",
-        hasTouch: "unknown"
+        version: "v2",
+        osBrowser: p[2] || "未知",
+        deviceType: p[3] || "Device",
+        browser: p[4] || "Browser",
+        platform: p[5] || "Other",
+        res: p[6] || "未知",
+        dpr: p[7] || "1",
+        net: p[8] || "未知",
+        lang: p[9] || "zh",
+        theme: p[10] || "light",
+        uid: p[11] || "N/A",
+        visitorId: p[11] || "N/A",
+        sessionId: p[12] || "N/A",
+        fp: p[13] || "N/A",
+        visits: p[14] || "1",
+        timeZone: p[15] || "unknown",
+        hasTouch: p[16] || "unknown"
     };
 }
 
@@ -693,21 +671,7 @@ const BITRATE_LABELS = {
 let selectedQuality = "pro_2k";
 let selectedBitrate = "standard";
 
-function getEncoderConfig(qualityKey = selectedQuality) {
-    const config = QUALITY_CONFIGS[qualityKey];
-    if (!config) return null;
-    const bitratePreset = BITRATE_PRESETS[selectedBitrate] || BITRATE_PRESETS.standard;
-
-    return {
-        width: config.width,
-        height: config.height,
-        frameRate: config.frameRate,
-        bitrateMin: Math.round(config.bitrateMin * bitratePreset.minScale),
-        bitrateMax: Math.round(config.bitrateMax * bitratePreset.maxScale)
-    };
-}
-
-function getEncoderConfigFor(qualityKey = selectedQuality, bitrateKey = selectedBitrate) {
+function getEncoderConfig(qualityKey = selectedQuality, bitrateKey = selectedBitrate) {
     const config = QUALITY_CONFIGS[qualityKey];
     if (!config) return null;
     const bitratePreset = BITRATE_PRESETS[bitrateKey] || BITRATE_PRESETS.standard;
@@ -775,24 +739,9 @@ function resetAutoNetworkState() {
     networkRecoveryTimer = null;
 }
 
-async function applyScreenQuality(qualityKey) {
+async function applyScreenQuality(qualityKey, bitrateKey = selectedBitrate) {
     if (!screenTrack) return;
-    const config = getEncoderConfig(qualityKey);
-    if (!config) return;
-    await screenTrack.setEncoderConfiguration({
-        width: config.width,
-        height: config.height,
-        frameRate: config.frameRate,
-        bitrateMin: config.bitrateMin,
-        bitrateMax: config.bitrateMax
-    });
-    updateShareOverview();
-}
-
-
-async function applyAutoNetworkConfig(nextQuality, nextBitrate) {
-    if (!screenTrack) return;
-    const config = getEncoderConfigFor(nextQuality, nextBitrate);
+    const config = getEncoderConfig(qualityKey, bitrateKey);
     if (!config) return;
 
     await screenTrack.setEncoderConfiguration({
@@ -803,9 +752,12 @@ async function applyAutoNetworkConfig(nextQuality, nextBitrate) {
         bitrateMax: config.bitrateMax
     });
 
-    selectedQuality = nextQuality;
-    selectedBitrate = nextBitrate;
-    setBitrateActive(selectedBitrate);
+    // 手动切换画质时保留当前码率选择；自动升降级会传入目标码率并同步选中态
+    if (bitrateKey !== selectedBitrate) {
+        selectedQuality = qualityKey;
+        selectedBitrate = bitrateKey;
+        setBitrateActive(selectedBitrate);
+    }
     updateShareStatus();
 }
 
@@ -824,7 +776,7 @@ async function autoDowngradeForWeakNetwork() {
     const nextBitrate = "low";
 
     try {
-        await applyAutoNetworkConfig(nextQuality, nextBitrate);
+        await applyScreenQuality(nextQuality, nextBitrate);
         autoNetworkState.downgraded = true;
         networkNotice = `🟡 网络较弱，已自动降画质`;
         updateShareStatus();
@@ -839,7 +791,7 @@ async function autoRestoreAfterNetworkRecovery() {
     const originalBitrate = autoNetworkState.originalBitrate || selectedBitrate;
 
     try {
-        await applyAutoNetworkConfig(originalQuality, originalBitrate);
+        await applyScreenQuality(originalQuality, originalBitrate);
         autoNetworkState.downgraded = false;
         autoNetworkState.originalQuality = "";
         autoNetworkState.originalBitrate = "";

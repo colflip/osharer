@@ -124,18 +124,16 @@ function showVideoPrompt() {
     }, 6000);
 }
 
-// 4 位邀请码自动进入逻辑（保留以支持手动输入场景）
+// 4 位邀请码自动进入逻辑；手动点击「确认进入」走同一流程
 document.getElementById('pwdInput').addEventListener('input', function() {
     if (this.value.length === 4) {
         document.getElementById('enterBtn').click();
     }
 });
+document.getElementById('enterBtn').onclick = autoJoin;
 
-// Wait for config.json to load before joining the room.
-// 超时放宽到 60s：部署在免费 PaaS（Render 等）时，服务空闲会被休眠，
-// 首次请求要唤醒实例，耗时可达数秒到数十秒。原 10s 超时在冷启动下会失败，
-// 失败即把用户踢回登录页，表现成"卡死"。
-function waitForConfig(timeoutMs = 60000) {
+// Wait for config.json to load before joining the room
+function waitForConfig(timeoutMs = 10000) {
     return new Promise((resolve, reject) => {
         if (window.oSharerConfig?.APP_ID && window.oSharerConfig.APP_ID !== "YOUR_AGORA_APP_ID") {
             resolve();
@@ -150,56 +148,15 @@ function waitForConfig(timeoutMs = 60000) {
                 clearInterval(check);
                 reject(new Error("缺少声网 APP_ID，请联系分享者检查配置"));
             }
-        }, 200);
+        }, 100);
     });
-}
-
-// 失败兜底：不再把用户踢回登录页（那会表现为"卡死"且无法恢复），
-// 而是保留观看界面并显示原因 + 重试按钮。
-function showFatal(msg) {
-    const statusBar = document.getElementById('status-bar');
-    const errorMsg = document.getElementById('error-msg');
-    const retryBtn = document.getElementById('retryBtn');
-
-    // 确保处于观看界面
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('video-container').style.display = 'block';
-
-    if (statusBar) {
-        statusBar.style.display = "block";
-        statusBar.innerText = msg;
-    }
-    if (errorMsg) errorMsg.innerText = "";
-    if (retryBtn) retryBtn.style.display = "inline-block";
-}
-
-function bindRetry() {
-    const retryBtn = document.getElementById('retryBtn');
-    if (!retryBtn) return;
-    retryBtn.onclick = () => {
-        retryBtn.disabled = true;
-        retryBtn.innerText = "重试中...";
-        // 重试时重置状态栏并重新走主流程
-        const statusBar = document.getElementById('status-bar');
-        if (statusBar) statusBar.innerText = "正在重新连接...";
-        retryBtn.style.display = "none";
-        autoJoin().finally(() => {
-            retryBtn.disabled = false;
-            retryBtn.innerText = "重试";
-        });
-    };
 }
 
 // ===== 自动进入房间（主流程）=====
 async function autoJoin() {
     const pwdInput = document.getElementById('pwdInput');
     const errorMsg = document.getElementById('error-msg');
-    const enterBtn = document.getElementById('enterBtn');
-    const retryBtn = document.getElementById('retryBtn');
 
-    // 每次进入先隐藏重试按钮，避免上一次失败的残留
-    if (retryBtn) retryBtn.style.display = "none";
-    
     // 从 URL 获取密码
     const urlPwd = getHashParam('pwd');
     if (!urlPwd || urlPwd.length !== 4) {
@@ -223,9 +180,7 @@ async function autoJoin() {
     try {
         await waitForConfig();
         const appId = window.oSharerConfig.APP_ID;
-        statusBar.innerText = "正在加载投屏组件（首次访问可能稍慢）...";
-        const sdkReady = await ensureAgoraSdk();
-        window.AgoraRTC = sdkReady;
+        await ensureAgoraSdk();
         const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
         // 构造与分享端一致的频道名
         const channel = `oshare-${roomId}-${pwd}`;
@@ -314,24 +269,13 @@ async function autoJoin() {
 
     } catch (e) {
         console.error(e);
-        // 失败不再踢回登录页（那样表现成"卡死"且无法恢复）；
-        // 改为保留观看界面，给出明确原因与重试入口。
-        const msg = e && e.message ? e.message : "进入失败：可能密码错误或连接超时";
-        showFatal(`🔴 ${msg}\n如分享仍在进行，可点击重试。`);
-        if (errorMsg) errorMsg.innerText = "";
+        errorMsg.innerText = e.message || "进入失败：可能密码错误或连接超时";
+        // 异常时回退到登录界面
+        document.getElementById('login-screen').style.display = 'flex';
+        document.getElementById('video-container').style.display = 'none';
+        document.getElementById('pwdInput').focus();
     }
 }
 
-// 页面加载后自动进入房间。
-// 用 DOMContentLoaded 替代 window.onload：onload 要等全部子资源（含 1.2MB SDK）
-// 下载完才触发，首屏反馈被不必要地延后。DOMContentLoaded 在 DOM 解析完即触发，
-// 更早开始等待 config，对冷启动更友好。
-if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => {
-        bindRetry();
-        autoJoin();
-    });
-} else {
-    bindRetry();
-    autoJoin();
-}
+// 页面加载后自动进入房间
+window.onload = autoJoin;

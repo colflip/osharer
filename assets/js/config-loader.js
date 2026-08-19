@@ -32,7 +32,6 @@
     function applyConfig(id) {
         window.oSharerConfig = {
             APP_ID: id || "YOUR_AGORA_APP_ID",
-            GITHUB_REPO: "colflip/osharer",
             AGORA_SDK_SOURCES: [
                 "vendor/AgoraRTC_N-4.23.1.js",
                 "https://download.agora.io/sdk/release/AgoraRTC_N-4.23.1.js"
