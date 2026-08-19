@@ -104,7 +104,7 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
-    // ===== 运行时配置（沿用原 serve.js：优先读文件，回退环境变量）=====
+    // ===== 运行时配置（沿用 serve.js 行为：优先读文件，回退环境变量）=====
     if (req.method === "GET" && url === "/config.json") {
         const localConfigPath = path.join(ROOT, "config.json");
         let appId = process.env.AGORA_APP_ID || "";

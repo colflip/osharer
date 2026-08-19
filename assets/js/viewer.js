@@ -263,8 +263,8 @@ async function autoJoin() {
         });
 
         client.on("peer-leave", () => {
-           statusBar.style.display = "block";
-           statusBar.innerText = "🔴 分享者已离开";
+            statusBar.style.display = "block";
+            statusBar.innerText = "🔴 分享者已离开";
         });
 
     } catch (e) {

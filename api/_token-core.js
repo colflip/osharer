@@ -4,7 +4,7 @@
 
 const { RtcTokenBuilder, RtcRole } = require("agora-token");
 
-// 与 sharer.js:1012 的 `oshare-${roomId}-${password}` 保持一致。
+// 与 sharer.js 的 `oshare-${roomId}-${password}` 保持一致。
 // roomId 来自 Math.random().toString(36).substring(7)（小写字母数字，偶发为空串），
 // password 是 4 位数字。
 //
@@ -13,7 +13,7 @@ const { RtcTokenBuilder, RtcRole } = require("agora-token");
 const CHANNEL_RE = /^oshare-[a-z0-9]{0,32}-\d{4}$/;
 
 // Agora String User Account 上限 255 字节。
-// 观众端 uid 是拼接的设备信息（viewer.js:204），约 150 字符。
+// 观众端 uid 是拼接的设备信息（viewer.js 的 getExtendedDeviceInfo），约 150 字符。
 const MAX_ACCOUNT_BYTES = 255;
 
 const TOKEN_TTL_SECONDS = 3600;

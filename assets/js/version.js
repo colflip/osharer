@@ -1,18 +1,5 @@
 (function renderVersion() {
-    var config = window.oSharerConfig || {};
-
-    function displayVersion(value) {
-        if (!value) return;
-
-        // 更新 HTML 中硬编码的 #version-text 元素
-        var vt = document.getElementById("version-text");
-        if (vt) vt.textContent = value;
-    }
-
-    function displayError() {
-        var vt = document.getElementById("version-text");
-        if (vt) vt.textContent = "unknown";
-    }
+    var vt = document.getElementById("version-text");
 
     // 每次都带时间戳，强制不命中缓存，获取最新版本号
     fetch("assets/version.json?t=" + Date.now(), { cache: "no-store" })
@@ -22,9 +9,10 @@
         })
         .then(function(data) {
             if (data.shortSha) {
-                displayVersion(data.shortSha);
-                return;
+                if (vt) vt.textContent = data.shortSha;
             }
         })
-        .catch(displayError);
+        .catch(function() {
+            if (vt) vt.textContent = "unknown";
+        });
 })();

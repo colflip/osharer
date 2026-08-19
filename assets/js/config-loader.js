@@ -1,11 +1,13 @@
 // Load AGORA_APP_ID at runtime from a separate JSON config file.
 // The config file is NOT part of the codebase — it is deployed separately.
-// No build step, no deployment script, no Web Service required.
+// No build step or deployment script is required on the client side.
 //
 // How it works:
 // 1. Place config.json (containing {"appId": "your-app-id"}) in the deploy directory
 // 2. config-loader.js fetches it on page load
 // 3. The file is git-ignored so the key is never in the repo
+//
+// On Render / Vercel, scripts/render-build.js writes this file from AGORA_APP_ID.
 
 (function loadConfig() {
     var appId = "";
